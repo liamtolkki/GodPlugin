@@ -1,0 +1,21 @@
+name: God
+version: '0.6.2'
+main: dev.liamtolkkinen.god.GodPlugin
+description: Stateless GOD conversation bridge for the Minecraft server
+author: LiamTolkkinen
+api-version: '26.1.2'
+load: POSTWORLD
+commands:
+  god:
+    description: Configure and inspect GOD
+    usage: /god <on|off|listen|status|reload|economy|alias|favor>
+  duel:
+    description: Challenge or respond to another player
+    usage: /duel <player|accept|decline|cancel|status>
+  godlocation:
+    description: Manage personal GOD locations
+    usage: /godlocation <save|list|delete|go> [name]
+permissions:
+  god.admin:
+    description: Allows trusted GOD administration commands
+    default: op
