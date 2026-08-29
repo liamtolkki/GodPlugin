@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# One-time source migration used to wire the released GodApi contract into the legacy class.
 path = Path("src/main/java/dev/liamtolkkinen/god/GodPlugin.java")
 text = path.read_text(encoding="utf-8")
 
