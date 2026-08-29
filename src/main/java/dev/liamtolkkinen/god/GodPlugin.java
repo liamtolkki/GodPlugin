@@ -6,6 +6,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import dev.liamtolkkinen.god.integration.GodIntegrationRegistry;
+import dev.liamtolkkinen.god.integration.GodIntegrationToolBridge;
+import dev.liamtolkkinen.godapi.GodTool;
+import dev.liamtolkkinen.godapi.GodToolContext;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -139,6 +143,8 @@ public final class GodPlugin extends JavaPlugin implements Listener {
     private final ArrayDeque<ChatLine> publicChat = new ArrayDeque<>();
     private ExecutorService executor;
     private HttpClient httpClient;
+    private GodIntegrationRegistry integrations;
+    private GodIntegrationToolBridge integrationToolBridge;
     private Path godDirectory;
     private Pattern triggerPattern;
     private int timeoutSeconds;
@@ -196,6 +202,12 @@ public final class GodPlugin extends JavaPlugin implements Listener {
         httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(timeoutSeconds))
             .build();
+
+        integrations = new GodIntegrationRegistry(getServer());
+        integrationToolBridge = new GodIntegrationToolBridge(GSON);
+        GodIntegrationRegistry.Snapshot startupIntegrations = integrations.snapshot();
+        getLogger().info("Discovered " + startupIntegrations.integrations().size() +
+            " God integration(s) exposing " + startupIntegrations.tools().size() + " tool(s).");
 
         getServer().getPluginManager().registerEvents(this, this);
         getLogger().info("GOD conversation bridge enabled. Trigger word: " + triggerWord);
@@ -1009,6 +1021,7 @@ public final class GodPlugin extends JavaPlugin implements Listener {
         ResolvedPolicy policy
     ) throws IOException, InterruptedException {
         JsonObject config = JsonParser.parseString(Files.readString(godDirectory.resolve("config.json"))).getAsJsonObject();
+        GodIntegrationRegistry.Snapshot integrationSnapshot = integrations.snapshot();
         JsonObject player = new JsonObject();
         player.addProperty("uuid", playerUuid.toString());
         player.addProperty("name", playerName);
@@ -1073,6 +1086,10 @@ public final class GodPlugin extends JavaPlugin implements Listener {
             + "uses resource as the advancement key and text as grant or revoke. spawn_mob is administrator-only, uses an exact namespaced entity resource and count 1-10, and cannot spawn wardens, dragons, elder guardians, or withers. "
             + "smite is administrator-only and uses resource visual, nonlethal, or lethal; use lethal only when clearly ordered or merited.";
         instructions += " store_location saves the initiating player's current location under resource; delete_saved_location deletes an exact stored name; teleport_saved_location selects one exact stored name after consulting get_saved_locations; return_to_last_death is allowed only after consulting get_last_death and when available. Trusted code charges configured service prices.";
+        String integrationInstructions = integrationSnapshot.combinedInstructions();
+        if (!integrationInstructions.isBlank()) {
+            instructions += "\n\n## Plugin integrations\n\n" + integrationInstructions;
+        }
 
         JsonObject schema = JsonParser.parseString("""
             {
@@ -1138,7 +1155,7 @@ public final class GodPlugin extends JavaPlugin implements Listener {
         body.addProperty("input", GSON.toJson(input));
         body.add("reasoning", reasoning);
         body.add("text", text);
-        body.add("tools", buildReadOnlyTools());
+        body.add("tools", buildReadOnlyTools(integrationSnapshot));
         body.addProperty("parallel_tool_calls", false);
 
         JsonObject responseJson = sendApiRequest(config, interactionId, body);
@@ -1147,7 +1164,7 @@ public final class GodPlugin extends JavaPlugin implements Listener {
         int toolCalls = 0;
         Map<String, MaterialQuote> approvedQuotes = new java.util.HashMap<>();
         for (int toolRound = 0; toolRound < 3; toolRound++) {
-            JsonArray toolOutputs = executeRequestedTools(responseJson, playerUuid, policy, snapshot, approvedQuotes);
+            JsonArray toolOutputs = executeRequestedTools(responseJson, interactionId, playerUuid, playerName, policy, snapshot, approvedQuotes, integrationSnapshot);
             if (toolOutputs.isEmpty()) break;
             toolCalls += toolOutputs.size();
             JsonObject continuation = new JsonObject();
@@ -1157,11 +1174,11 @@ public final class GodPlugin extends JavaPlugin implements Listener {
             continuation.add("input", toolOutputs);
             continuation.add("reasoning", reasoning);
             continuation.add("text", text);
-            continuation.add("tools", buildReadOnlyTools());
+            continuation.add("tools", buildReadOnlyTools(integrationSnapshot));
             continuation.addProperty("parallel_tool_calls", false);
             responseJson = sendApiRequest(config, interactionId, continuation);
             accumulateUsage(usage, responseJson);
-            if (toolRound == 2 && !executeRequestedTools(responseJson, playerUuid, policy, snapshot, new java.util.HashMap<>()).isEmpty()) {
+            if (toolRound == 2 && !executeRequestedTools(responseJson, interactionId, playerUuid, playerName, policy, snapshot, new java.util.HashMap<>(), integrationSnapshot).isEmpty()) {
                 throw new IllegalStateException("The model exceeded the local information-tool limit.");
             }
         }
@@ -1219,8 +1236,8 @@ public final class GodPlugin extends JavaPlugin implements Listener {
         return JsonParser.parseString(response.body()).getAsJsonObject();
     }
 
-    private JsonArray buildReadOnlyTools() {
-        return JsonParser.parseString("""
+    private JsonArray buildReadOnlyTools(GodIntegrationRegistry.Snapshot integrationSnapshot) {
+        JsonArray tools = JsonParser.parseString("""
             [
               {
                 "type":"function",
@@ -1259,10 +1276,15 @@ public final class GodPlugin extends JavaPlugin implements Listener {
               }
             ]
             """).getAsJsonArray();
+        for (GodTool tool : integrationSnapshot.toolList()) {
+            tools.add(integrationToolBridge.definition(tool));
+        }
+        return tools;
     }
 
-    private JsonArray executeRequestedTools(JsonObject response, UUID playerUuid, ResolvedPolicy policy,
-        ServerSnapshot snapshot, Map<String, MaterialQuote> approvedQuotes) throws IOException {
+    private JsonArray executeRequestedTools(JsonObject response, String interactionId, UUID playerUuid, String playerName,
+        ResolvedPolicy policy, ServerSnapshot snapshot, Map<String, MaterialQuote> approvedQuotes,
+        GodIntegrationRegistry.Snapshot integrationSnapshot) throws IOException {
         JsonArray outputs = new JsonArray();
         for (JsonElement element : response.getAsJsonArray("output")) {
             JsonObject item = element.getAsJsonObject();
@@ -1329,7 +1351,15 @@ public final class GodPlugin extends JavaPlugin implements Listener {
                     result.addProperty("error", exception.getMessage());
                 }
             } else {
-                throw new IllegalArgumentException("Unknown model information tool: " + name);
+                GodTool integrationTool = integrationSnapshot.tools().get(name);
+                if (integrationTool == null) {
+                    throw new IllegalArgumentException("Unknown model information tool: " + name);
+                }
+                result = integrationToolBridge.execute(
+                    integrationTool,
+                    new GodToolContext(playerUuid, playerName, interactionId),
+                    arguments
+                );
             }
             JsonObject output = new JsonObject();
             output.addProperty("type", "function_call_output");
