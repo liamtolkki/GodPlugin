@@ -1,0 +1,7 @@
+logs/
+config.local.json
+*.tmp
+players/*/relationship.json
+players/*/favor.json
+players/*/locations.json
+players/*/last-death.json

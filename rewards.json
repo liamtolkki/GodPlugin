@@ -1,0 +1,25 @@
+{
+  "minimumRelationshipReserve": 20,
+  "maximumItemsPerInteraction": 64,
+  "experiencePointCost": 0.02,
+  "items": {
+    "minecraft:bread": 0.05,
+    "minecraft:cooked_beef": 0.08,
+    "minecraft:arrow": 0.03,
+    "minecraft:coal": 0.04,
+    "minecraft:iron_ingot": 0.15,
+    "minecraft:gold_ingot": 0.25,
+    "minecraft:lapis_lazuli": 0.05,
+    "minecraft:redstone": 0.04,
+    "minecraft:emerald": 0.5,
+    "minecraft:diamond": 1.0,
+    "minecraft:netherite_scrap": 1.5,
+    "minecraft:netherite_ingot": 4.0,
+    "minecraft:golden_apple": 1.5,
+    "minecraft:enchanted_golden_apple": 6.0,
+    "minecraft:ender_pearl": 0.35,
+    "minecraft:experience_bottle": 0.2,
+    "minecraft:totem_of_undying": 5.0,
+    "minecraft:elytra": 10.0
+  }
+}

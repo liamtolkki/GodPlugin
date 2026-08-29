@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "buy": {
+    "minecraft:bread": { "itemQuantity": 4, "favorQuantity": 1 },
+    "minecraft:cooked_beef": { "itemQuantity": 4, "favorQuantity": 1 },
+    "minecraft:arrow": { "itemQuantity": 16, "favorQuantity": 1 },
+    "minecraft:coal": { "itemQuantity": 16, "favorQuantity": 1 },
+    "minecraft:iron_ingot": { "itemQuantity": 8, "favorQuantity": 1 },
+    "minecraft:gold_ingot": { "itemQuantity": 4, "favorQuantity": 1 },
+    "minecraft:lapis_lazuli": { "itemQuantity": 16, "favorQuantity": 1 },
+    "minecraft:redstone": { "itemQuantity": 16, "favorQuantity": 1 },
+    "minecraft:emerald": { "itemQuantity": 2, "favorQuantity": 1 },
+    "minecraft:diamond": { "itemQuantity": 1, "favorQuantity": 3 },
+    "minecraft:netherite_scrap": { "itemQuantity": 1, "favorQuantity": 5 },
+    "minecraft:netherite_ingot": { "itemQuantity": 1, "favorQuantity": 16 },
+    "minecraft:golden_apple": { "itemQuantity": 1, "favorQuantity": 4 },
+    "minecraft:enchanted_golden_apple": { "itemQuantity": 1, "favorQuantity": 20 },
+    "minecraft:ender_pearl": { "itemQuantity": 4, "favorQuantity": 1 },
+    "minecraft:experience_bottle": { "itemQuantity": 8, "favorQuantity": 2 },
+    "minecraft:totem_of_undying": { "itemQuantity": 1, "favorQuantity": 15 },
+    "minecraft:elytra": { "itemQuantity": 1, "favorQuantity": 40 }
+  },
+  "sell": {
+    "minecraft:iron_block": { "itemQuantity": 48, "favorQuantity": 1 },
+    "minecraft:gold_block": { "itemQuantity": 32, "favorQuantity": 1 },
+    "minecraft:diamond": { "itemQuantity": 32, "favorQuantity": 1 },
+    "minecraft:netherite_scrap": { "itemQuantity": 3, "favorQuantity": 1 },
+    "minecraft:netherite_ingot": { "itemQuantity": 2, "favorQuantity": 3 },
+    "minecraft:totem_of_undying": { "itemQuantity": 2, "favorQuantity": 1 }
+  },
+  "services": {
+    "savedLocationTeleport": 1,
+    "crossDimensionSavedLocationTeleport": 2,
+    "returnToLastDeath": 3,
+    "beneficialEffect": 1,
+    "giftDelivery": 0
+  },
+  "earnings": {
+    "totem_save": 1,
+    "major_advancement": 2,
+    "significant_mob_kill": 2,
+    "player_assault": 0,
+    "pvp_kill": 0,
+    "moral_kill": 0
+  },
+  "limits": {
+    "maximumBalance": 150,
+    "dailyEarnedFavor": 10,
+    "weeklyEarnedFavor": 40,
+    "dailyOfferingFavor": 5,
+    "maximumItemsPerTransaction": 128
+  }
+}
