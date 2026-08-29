@@ -1,5 +1,5 @@
 name: God
-version: '0.6.2'
+version: '${version}'
 main: dev.liamtolkkinen.god.GodPlugin
 description: Stateless GOD conversation bridge for the Minecraft server
 author: LiamTolkkinen
