@@ -4,12 +4,3 @@ request-timeout-seconds: 30
 cooldown-seconds: 3
 maximum-queued-requests: 50
 public-replies: true
-event-cooldown-seconds: 10
-events:
-  admin-arrival: true
-  admin-departure: true
-  pvp-kill: true
-  totem-save: true
-  major-advancement: true
-  significant-mob-kill: true
-  moral-kill: true
