@@ -5,7 +5,5 @@
   "reasoningEffort": "none",
   "verbosity": "low",
   "mode": "on",
-  "relationshipDefault": 50,
-  "relationshipHalfLifeDays": 30,
   "serverRoot": "../.."
 }
